@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+.env*
+playwright-report
+test-results
+www.teuteuteu.com.swf
+www.teuteuteu.com.swf:Zone.Identifier
+sources
+public/teuteuteu.mp4

@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+
+import { formatClicks, formatClicksDisplay, incrementClicks, normaliseDonorName } from "@/lib/format";
+
+describe("normaliseDonorName", () => {
+  it("keeps a presentable name and compacts whitespace", () => {
+    expect(normaliseDonorName("  Jean   Michel  ")).toBe("Jean Michel");
+  });
+
+  it("rejects a blank name", () => {
+    expect(normaliseDonorName(" \n ")).toBeNull();
+  });
+
+  it("caps a display name at 64 characters", () => {
+    expect(normaliseDonorName("a".repeat(80))).toHaveLength(64);
+  });
+});
+
+describe("large click counts", () => {
+  it("increments beyond JavaScript's safe integer limit without losing precision", () => {
+    expect(incrementClicks("9007199254740992")).toBe("9007199254740993");
+  });
+
+  it("keeps an exact localized representation", () => {
+    expect(formatClicks("9223372036854775807").replace(/\s/g, " ")).toBe("9 223 372 036 854 775 807");
+  });
+
+  it("uses a compact visual representation for very large values", () => {
+    expect(formatClicksDisplay("1250000000")).toMatch(/1,3\s?Md/);
+  });
+});

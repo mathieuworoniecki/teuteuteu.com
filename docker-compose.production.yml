@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: .
+      target: production
+    image: teuteuteu-com:local
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env.local
+        required: false
+    restart: unless-stopped
