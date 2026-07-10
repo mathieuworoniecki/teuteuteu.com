@@ -12,7 +12,7 @@ Le fichier `public/teuteuteu.mp3`, les deux états PNG du bouton et la timeline 
 
 ## Supabase
 
-Appliquer `supabase/migrations/20260710_teuteuteu.sql` dans le projet Supabase. Les clés de service restent uniquement dans `.env.local` ou dans les secrets du futur runtime.
+Appliquer toutes les migrations de `supabase/migrations/` dans l'ordre. La dernière active une purge quotidienne des empreintes anti-spam inactives depuis 48 heures. Les clés de service restent uniquement dans `.env.local` ou dans les variables chiffrées de Vercel.
 
 ## Buy Me a Coffee
 
@@ -20,6 +20,8 @@ Créer le webhook `https://<domaine>/api/webhooks/buymeacoffee`, sélectionner a
 
 Le handler vérifie le corps brut avec `x-signature-sha256`, ignore les tests dashboard et les dons anonymes, et ne conserve ni e-mail, ni montant, ni message.
 
-## Production
+## Production Vercel
 
-Construire et démarrer localement avec `docker compose -f docker-compose.production.yml up --build`. Le futur hébergement doit terminer TLS et écraser `X-Forwarded-For` avant d'atteindre Next, car cette adresse est utilisée uniquement sous forme hachée pour limiter les rafales de clics.
+La branche de production est `main`. GitHub Actions vérifie le projet et l'intégration Git Vercel crée automatiquement le déploiement de production. Vercel termine TLS, sert les assets via son CDN et fournit l'adresse visiteur normalisée, utilisée uniquement sous forme hachée pour limiter les rafales de clics.
+
+Le build Docker de référence reste disponible avec `docker compose -f docker-compose.production.yml up --build`. En incident, définir `CLICK_COUNTER_ENABLED=false` dans Vercel permet de conserver le site en ligne sans nouvelle écriture Supabase.

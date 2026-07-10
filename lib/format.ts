@@ -13,14 +13,14 @@ export function incrementClicks(value: ClickValue): string {
   return (clickBigInt(value) + 1n).toString();
 }
 
-export function formatClicks(value: ClickValue): string {
-  return new Intl.NumberFormat("fr-FR").format(clickBigInt(value));
+export function formatClicks(value: ClickValue, locale = "en"): string {
+  return new Intl.NumberFormat(locale).format(clickBigInt(value));
 }
 
-export function formatClicksDisplay(value: ClickValue): string {
+export function formatClicksDisplay(value: ClickValue, locale = "en"): string {
   const clicks = clickBigInt(value);
-  if (clicks < 1_000_000_000n) return new Intl.NumberFormat("fr-FR").format(clicks);
-  return new Intl.NumberFormat("fr-FR", {
+  if (clicks < 1_000_000_000n) return new Intl.NumberFormat(locale).format(clicks);
+  return new Intl.NumberFormat(locale, {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(clicks);

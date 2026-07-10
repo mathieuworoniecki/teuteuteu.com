@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { SupportExperience } from "@/components/support-experience";
 import { formatClicks, formatClicksDisplay, incrementClicks } from "@/lib/format";
+import { interpolate, type Messages, type SupportedLocale, type TextDirection } from "@/lib/i18n";
 import { LEGACY_DURATION_SECONDS, LEGACY_SHAKE_EVENTS, type LegacyShakeEvent } from "@/lib/legacy-timeline";
+import type { SupportMessages } from "@/lib/support-i18n";
 import type { SiteState } from "@/lib/types";
 
 type PlaybackMode = "paused" | "playing" | "loading";
@@ -14,11 +17,26 @@ const FADE_SECONDS = 0.075;
 const MAX_EVENT_LATENCY_SECONDS = 0.15;
 const PRESS_FEEDBACK_MS = 420;
 
-export function TeuteuteuMachine({ initialState }: { initialState: SiteState }) {
+type TeuteuteuMachineProps = {
+  direction: TextDirection;
+  initialState: SiteState;
+  locale: SupportedLocale;
+  messages: Messages;
+  supportMessages: SupportMessages;
+};
+
+export function TeuteuteuMachine({
+  direction,
+  initialState,
+  locale,
+  messages,
+  supportMessages,
+}: TeuteuteuMachineProps) {
   const [clicks, setClicks] = useState(initialState.clicks);
   const [mode, setMode] = useState<PlaybackMode>("paused");
   const [audioError, setAudioError] = useState(false);
   const [isVisuallyPressed, setIsVisuallyPressed] = useState(false);
+  const [supportResetToken, setSupportResetToken] = useState(0);
 
   const contextRef = useRef<AudioContext | null>(null);
   const bufferRef = useRef<AudioBuffer | null>(null);
@@ -45,8 +63,15 @@ export function TeuteuteuMachine({ initialState }: { initialState: SiteState }) 
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => void refreshState(), 15_000);
-    return () => window.clearInterval(timer);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshState();
+    };
+    const timer = window.setInterval(refreshWhenVisible, 60_000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [refreshState]);
 
   useEffect(
@@ -260,6 +285,7 @@ export function TeuteuteuMachine({ initialState }: { initialState: SiteState }) 
 
   const toggle = useCallback(() => {
     showPressFeedback();
+    setSupportResetToken((token) => token + 1);
     void countPress();
     if (mode === "playing") {
       pause();
@@ -269,34 +295,39 @@ export function TeuteuteuMachine({ initialState }: { initialState: SiteState }) 
   }, [countPress, mode, pause, play, showPressFeedback]);
 
   const isPlaying = mode === "playing";
-  const instruction = mode === "loading" ? "Loading..." : "Appuie sur le bouton";
+  const instruction = mode === "loading" ? messages.loading : messages.instruction;
+  const exactCounter = interpolate(messages.counter, { count: formatClicks(clicks, locale) });
+  const displayCounter = interpolate(messages.counter, { count: formatClicksDisplay(clicks, locale) });
 
   return (
-    <section className="machine" aria-label="Le bouton teuteuteu">
+    <section aria-label={messages.machineLabel} className="machine" dir={direction} lang={locale}>
       <p className="machine__instruction">{instruction}</p>
       <button
-        aria-label={isPlaying ? "Mettre teuteuteu en pause" : "Lancer teuteuteu"}
+        aria-label={isPlaying ? messages.pauseAction : messages.playAction}
         aria-pressed={isPlaying}
         className={`teu-button${isVisuallyPressed ? " is-pressed" : ""}`}
         onClick={toggle}
         type="button"
       >
-        <span className="sr-only">{isPlaying ? "Pause" : "Lecture"}</span>
+        <span className="sr-only">{isPlaying ? messages.pauseAction : messages.playAction}</span>
       </button>
       <p
-        aria-label={`${formatClicks(clicks)} clic${clicks === "1" ? "" : "s"} dans le monde`}
+        aria-label={exactCounter}
         aria-live="polite"
         className="machine__counter"
-        title={`${formatClicks(clicks)} clic${clicks === "1" ? "" : "s"}`}
+        title={exactCounter}
       >
-        {formatClicksDisplay(clicks)} clic{clicks === "1" ? "" : "s"} dans le monde
+        {displayCounter}
       </p>
       <p className="sr-only" role="status">
-        {audioError ? "Le son ne peut pas être lu sur cet appareil." : isPlaying ? "Lecture en cours." : "Lecture en pause."}
+        {audioError ? messages.statusError : isPlaying ? messages.statusPlaying : messages.statusPaused}
       </p>
-      <a className="support-link" href="https://buymeacoffee.com/alzok" rel="noopener noreferrer" target="_blank">
-        Un teu pour l’hébergement ?
-      </a>
+      <SupportExperience
+        direction={direction}
+        key={supportResetToken}
+        messages={messages}
+        supportMessages={supportMessages}
+      />
     </section>
   );
 }

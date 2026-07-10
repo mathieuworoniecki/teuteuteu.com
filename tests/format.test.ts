@@ -22,10 +22,14 @@ describe("large click counts", () => {
   });
 
   it("keeps an exact localized representation", () => {
-    expect(formatClicks("9223372036854775807").replace(/\s/g, " ")).toBe("9 223 372 036 854 775 807");
+    expect(formatClicks("9223372036854775807", "fr-FR").replace(/\s/g, " ")).toBe("9 223 372 036 854 775 807");
   });
 
   it("uses a compact visual representation for very large values", () => {
-    expect(formatClicksDisplay("1250000000")).toMatch(/1,3\s?Md/);
+    expect(formatClicksDisplay("1250000000", "fr-FR")).toMatch(/1,3\s?Md/);
+  });
+
+  it("uses the requested locale without reducing precision", () => {
+    expect(formatClicks("9007199254740993", "en-US")).toBe("9,007,199,254,740,993");
   });
 });

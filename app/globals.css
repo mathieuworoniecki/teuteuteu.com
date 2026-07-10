@@ -128,6 +128,198 @@ a {
   outline-offset: 0.26rem;
 }
 
+.support-panel {
+  position: fixed;
+  top: var(--support-y, 0);
+  left: var(--support-x, 0);
+  z-index: 20;
+  width: min(20.5rem, calc(100vw - 1.25rem));
+  padding: 0.2rem;
+  overflow: hidden;
+  border-color: #fff #404040 #404040 #fff;
+  border-style: solid;
+  border-width: 2px;
+  background: #d4d0c8;
+  box-shadow: 1px 1px 0 #000;
+  color: #111;
+  font-family: Tahoma, Verdana, sans-serif;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transition: left 135ms linear, top 135ms linear, opacity 100ms linear;
+}
+
+.support-panel.is-visible {
+  opacity: 1;
+}
+
+.support-panel[data-state="evading"] {
+  opacity: 0;
+  transition: left 260ms ease-in, top 260ms ease-in, opacity 180ms linear;
+}
+
+.support-panel.is-interactive {
+  pointer-events: auto;
+}
+
+.support-panel__titlebar {
+  display: flex;
+  min-height: 1.35rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.14rem 0.18rem 0.14rem 0.35rem;
+  background: #000080;
+  color: #fff;
+  font-weight: 700;
+}
+
+.support-panel__titlebar button {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  border-color: #fff #404040 #404040 #fff;
+  border-style: solid;
+  border-width: 1px;
+  place-items: center;
+  background: #d4d0c8;
+  color: #000;
+  font: 700 0.75rem/0.75rem Tahoma, Verdana, sans-serif;
+}
+
+.support-panel__titlebar button:active {
+  border-color: #404040 #fff #fff #404040;
+}
+
+.support-panel__cat-line {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  min-height: 3.4rem;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0.15rem 0;
+  padding: 0.2rem 0.35rem;
+  border: 1px dotted #777;
+  background: #fff;
+  color: #001f70;
+}
+
+.support-panel table {
+  width: calc(100% - 0.3rem);
+  margin: 0.3rem 0.15rem 0;
+  border-collapse: collapse;
+  background: #fff;
+  color: #111;
+  table-layout: fixed;
+}
+
+.support-panel th,
+.support-panel td {
+  padding: 0.24rem 0.3rem;
+  border: 1px solid #9a9a9a;
+  overflow-wrap: anywhere;
+  text-align: start;
+  vertical-align: top;
+}
+
+.support-panel th {
+  width: 56%;
+  font-weight: 400;
+}
+
+.support-panel td {
+  direction: ltr;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  text-align: end;
+}
+
+.support-panel tr.is-optional {
+  color: #555;
+}
+
+.support-panel tr.is-optional span {
+  font-size: 0.62rem;
+}
+
+.support-panel tfoot th,
+.support-panel tfoot td {
+  border-top: 2px solid #000080;
+  color: #000080;
+  font-weight: 700;
+}
+
+.support-panel > p {
+  margin: 0.3rem 0.35rem;
+  color: #454545;
+  font-size: 0.62rem;
+}
+
+.support-panel__cta {
+  display: block;
+  width: calc(100% - 0.7rem);
+  margin: 0.35rem;
+  padding: 0.3rem 0.45rem;
+  border-color: #fff #404040 #404040 #fff;
+  border-style: solid;
+  border-width: 2px;
+  background: #d4d0c8;
+  color: #000080;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.support-panel__cta:active {
+  border-color: #404040 #fff #fff #404040;
+}
+
+.support-panel button:focus-visible,
+.support-panel__cta:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+}
+
+.pixel-cat {
+  width: 3.4rem;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.pixel-cat__eyes {
+  animation: cat-blink 4.2s steps(1, end) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pixel-cat__tail {
+  animation: cat-tail 620ms steps(2, end) infinite alternate;
+  transform-box: fill-box;
+  transform-origin: left bottom;
+}
+
+@keyframes cat-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.2);
+  }
+}
+
+@keyframes cat-tail {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-12deg);
+  }
+}
+
 .donor-stream {
   position: absolute;
   inset: 0 auto 0 0;
@@ -196,6 +388,18 @@ a {
   .support-link {
     bottom: 0.5rem;
   }
+
+  .support-panel {
+    font-size: 0.62rem;
+  }
+
+  .support-panel__cat-line {
+    min-height: 2.5rem;
+  }
+
+  .pixel-cat {
+    width: 2.6rem;
+  }
 }
 
 @media (max-width: 420px) {
@@ -207,6 +411,10 @@ a {
     opacity: 0.46;
     font-size: clamp(0.86rem, 4.8vw, 1.35rem);
   }
+
+  .support-panel {
+    width: min(19rem, calc(100vw - 1rem));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -217,8 +425,14 @@ a {
   }
 
   .donor-stream__track,
+  .pixel-cat__eyes,
+  .pixel-cat__tail,
   .teu-button {
     animation: none;
     transition: none;
+  }
+
+  .support-panel {
+    transition: opacity 100ms linear;
   }
 }

@@ -1,10 +1,13 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "teuteuteu.com — Press the button";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+import { messagesFor, supportedLocale } from "@/lib/i18n";
 
-export default function OpenGraphImage() {
+export const runtime = "nodejs";
+
+export function GET(request: Request) {
+  const locale = supportedLocale(new URL(request.url).searchParams.get("lang")) ?? "en";
+  const messages = messagesFor(locale);
+
   return new ImageResponse(
     (
       <div
@@ -19,7 +22,7 @@ export default function OpenGraphImage() {
         }}
       >
         <div style={{ color: "#39a1ff", fontFamily: "sans-serif", fontSize: 46, marginBottom: 38 }}>
-          Press the button
+          {messages.instruction}
         </div>
         <div
           style={{
@@ -34,6 +37,13 @@ export default function OpenGraphImage() {
         />
       </div>
     ),
-    { ...size },
+    {
+      height: 630,
+      headers: {
+        "Cache-Control": "public, max-age=3600",
+        "Vercel-CDN-Cache-Control": "public, max-age=86400",
+      },
+      width: 1200,
+    },
   );
 }

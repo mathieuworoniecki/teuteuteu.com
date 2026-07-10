@@ -6,12 +6,12 @@ Explain the real operating budget behind teuteuteu.com and invite support with h
 
 ## Cost model
 
-The initial configurable estimate is:
+The initial configurable current cost is:
 
 - Vercel Pro: USD 20 per month, including its monthly usage credit.
-- Supabase Pro: USD 25 per month for the first project.
+- Supabase Free: USD 0 per month. Mention the optional Pro upgrade at USD 25 per month separately, without counting it in the current total.
 - Domain name: approximately EUR 16 per year.
-- Summary: USD 45 per month plus EUR 16 per year, excluding taxes, exchange-rate changes and usage overages.
+- Summary: USD 20 per month plus EUR 16 per year, excluding taxes, exchange-rate changes and usage overages.
 
 These values live in one typed configuration object rather than inside the presentation component. The panel labels the total as an estimate and links to `https://buymeacoffee.com/alzok`; it does not imply that a donation is tax deductible or guarantee a fixed future hosting bill.
 

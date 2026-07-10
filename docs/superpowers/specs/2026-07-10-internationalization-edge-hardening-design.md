@@ -28,7 +28,7 @@ Make the single-page restoration feel native to an international visitor without
 
 - Vercel's GitHub integration deploys every push to `main`; GitHub Actions only validates lint, types, tests and builds.
 - Vercel automatically serves static files through its CDN. Add explicit one-year immutable browser caching only to the historical MP3, button PNGs and icon whose contents are treated as versioned artefacts.
-- Never cache `/api/state`, `/api/click` or webhook responses. The HTML remains dynamic because it contains the current counter and donor list.
+- Give `/api/state` a two-second Vercel-only micro-cache to collapse viral read bursts. Never cache `/api/click` or webhook responses. The HTML remains dynamic because it contains the current counter and donor list.
 - Update the service worker to cache immutable assets and use network-first navigation with the last successful page as offline fallback. It must not return a permanently cached French or English shell to every visitor.
 
 ## Abuse and failure handling

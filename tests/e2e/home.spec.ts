@@ -12,10 +12,10 @@ test("keeps the historical interaction accessible and scroll-free", async ({ pag
   });
   await page.goto("/");
 
-  await expect(page.getByRole("button", { name: "Lancer teuteuteu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play teuteuteu" })).toBeVisible();
   const button = page.locator(".teu-button");
   await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
-  await expect(page.getByRole("link", { name: "Un teu pour l’hébergement ?" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "A teu for hosting?" })).toHaveAttribute(
     "href",
     "https://buymeacoffee.com/alzok",
   );
@@ -24,8 +24,77 @@ test("keeps the historical interaction accessible and scroll-free", async ({ pag
   await expect(button).toHaveClass(/is-pressed/);
   await expect(button).not.toHaveClass(/is-pressed/, { timeout: 1_500 });
   await expect(button).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Appuie sur le bouton")).toBeVisible();
+  await expect(page.getByText("Press the button")).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __legacyShakeCount: number }).__legacyShakeCount))
     .toBeGreaterThan(0);
+});
+
+test("detects browser languages and supports right-to-left copy", async ({ browser }) => {
+  const french = await browser.newContext({ locale: "fr-FR" });
+  const frenchPage = await french.newPage();
+  await frenchPage.goto("/");
+  await expect(frenchPage.locator("html")).toHaveAttribute("lang", "fr");
+  await expect(frenchPage.getByText("Appuie sur le bouton")).toBeVisible();
+  await french.close();
+
+  const arabic = await browser.newContext({ locale: "ar" });
+  const arabicPage = await arabic.newPage();
+  await arabicPage.goto("/");
+  await expect(arabicPage.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(arabicPage.getByText("اضغط على الزر")).toBeVisible();
+  await expect(arabicPage.locator("body")).toHaveCSS("overflow", "hidden");
+  await arabic.close();
+});
+
+test("allows a supported language override without adding interface chrome", async ({ page }) => {
+  await page.goto("/?lang=ja");
+  await expect(page.locator("main")).toHaveAttribute("lang", "ja");
+  await expect(page.getByText("ボタンを押して")).toBeVisible();
+});
+
+test("plays two support-panel evasions and then becomes stable", async ({ page }) => {
+  await page.goto("/");
+  const link = page.getByRole("link", { name: "A teu for hosting?", exact: true });
+  const panel = page.locator(".support-panel");
+
+  await link.hover();
+  await expect(panel).toHaveAttribute("data-state", "following");
+  await expect(panel).toHaveAttribute("data-evasions", "1", { timeout: 4_000 });
+  await expect(page.getByText("Are you sure?")).toBeVisible({ timeout: 2_000 });
+  await expect(panel).toHaveAttribute("data-evasions", "2", { timeout: 4_000 });
+  await expect(panel).toHaveAttribute("data-state", "stable", { timeout: 2_000 });
+  await expect(page.getByText("A tiny tip for my kibble?")).toBeVisible();
+
+  const box = await panel.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+
+  await page.getByRole("button", { name: "Play teuteuteu" }).click();
+  await expect(panel).toHaveAttribute("data-state", "closed");
+});
+
+test("opens support costs accessibly for keyboard and reduced motion", async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await context.newPage();
+  await page.goto("/");
+  const link = page.getByRole("link", { name: "A teu for hosting?", exact: true });
+  const panel = page.locator(".support-panel");
+
+  await link.focus();
+  await expect(panel).toHaveAttribute("data-state", "stable");
+  await expect(page.getByText("Current estimate")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveAttribute("data-state", "closed");
+
+  await link.hover();
+  await expect(panel).toHaveAttribute("data-state", "stable");
+  await page.waitForTimeout(2_700);
+  await expect(panel).toHaveAttribute("data-evasions", "0");
+  await context.close();
 });
