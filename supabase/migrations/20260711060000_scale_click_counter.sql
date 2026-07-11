@@ -75,10 +75,10 @@ begin
 
   if accepted then
     selected_shard := (get_byte(decode(p_visitor_hash, 'hex'), 0) % 64)::smallint;
-    update public.click_counter_shards
-       set total_clicks = total_clicks + 1,
+    update public.click_counter_shards as shards
+       set total_clicks = shards.total_clicks + 1,
            updated_at = now_at
-     where shard_id = selected_shard;
+     where shards.shard_id = selected_shard;
   end if;
 
   select stats.total_clicks into new_total
