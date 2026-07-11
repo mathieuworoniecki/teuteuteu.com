@@ -13,13 +13,13 @@ import {
 } from "@/lib/support-machine";
 
 describe("support cost model", () => {
-  it("separates current costs from the optional Supabase upgrade", () => {
+  it("shows the active Vercel and Supabase Pro costs", () => {
     expect(supportCosts.filter((cost) => !cost.optional)).toEqual([
       { name: "Vercel Pro", price: "$20", period: "month", optional: false },
-      { name: "Supabase Free", price: "$0", period: "month", optional: false },
       { name: "Domain", price: "€16", period: "year", optional: false },
+      { name: "Supabase Pro", price: "$25+", period: "month", optional: false },
     ]);
-    expect(currentCostSummary).toBe("$20 / month + €16 / year");
+    expect(currentCostSummary).toBe("$45+ / month + €16 / year");
   });
 
   it("translates every support message in every supported locale", () => {

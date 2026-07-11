@@ -16,11 +16,12 @@ A modern restoration of the original 2000s Flash website. Press the blue button 
 ## Modern additions
 
 - Automatic browser-language detection with more than 50 locale variants and RTL support.
-- A persistent global click counter backed by an atomic Supabase function.
+- A live global click counter backed by 64 atomic Supabase shards and a Vercel CDN micro-cache.
 - A scrolling supporter list populated by signed Buy Me a Coffee webhooks.
 - A playful, translated hosting-cost panel with a tiny animated pixel cat.
 - Keyboard, touch, reduced-motion and screen-reader support.
-- PWA/offline assets, localized social previews, immutable static caching and layered abuse protection.
+- Stable localized URLs and a sourced history page in every supported language.
+- PWA/offline assets, localized social previews, structured metadata and layered BotID/WAF abuse protection.
 
 ## Stack
 
@@ -62,6 +63,8 @@ docker compose -f docker-compose.production.yml up --build
 | `CLICK_COUNTER_ENABLED` | Emergency read-only switch for the counter |
 | `BUY_ME_A_COFFEE_WEBHOOK_SECRET` | Webhook signature verification secret |
 | `NEXT_PUBLIC_SITE_URL` | Canonical production URL |
+| `GOOGLE_SITE_VERIFICATION` | Optional Google Search Console verification token |
+| `BING_SITE_VERIFICATION` | Optional Bing Webmaster Tools verification token |
 
 Never commit real values. Vercel injects production secrets and `.env.local` is ignored by Git.
 
@@ -77,6 +80,8 @@ npm run build
 ```
 
 The production branch is `main`. Every push is verified by GitHub Actions and automatically deployed through the repository's Vercel integration.
+
+Public counter reads are refreshed every 2.5 seconds while a page is visible. Vercel's two-second CDN cache collapses those requests before Supabase; supporter reads use a separate one-minute cache. Vercel Web Analytics records page views but deliberately does not emit one paid analytics event per button press.
 
 ## Historical source
 

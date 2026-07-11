@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test("keeps the historical interaction accessible and scroll-free", async ({ page }) => {
+  await page.route("**/api/click", (route) =>
+    route.fulfill({ contentType: "application/json", body: JSON.stringify({ clicks: "42", limited: false }) }),
+  );
   await page.addInitScript(() => {
     const originalAnimate = Element.prototype.animate;
     const state = window as unknown as { __legacyShakeCount: number };
@@ -89,6 +92,8 @@ test("opens support costs accessibly for keyboard and reduced motion", async ({ 
   await link.focus();
   await expect(panel).toHaveAttribute("data-state", "stable");
   await expect(page.getByText("Current estimate")).toBeVisible();
+  await expect(page.getByText("$25+ / month")).toBeVisible();
+  await expect(page.getByText("$45+ / month + €16 / year")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(panel).toHaveAttribute("data-state", "closed");
 
@@ -97,4 +102,43 @@ test("opens support costs accessibly for keyboard and reduced motion", async ({ 
   await page.waitForTimeout(2_700);
   await expect(panel).toHaveAttribute("data-evasions", "0");
   await context.close();
+});
+
+test("refreshes the global counter without requiring a local click", async ({ page }) => {
+  let globalClicks = "100";
+  await page.route("**/api/counter", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ clicks: globalClicks, configured: true, updatedAt: new Date().toISOString() }),
+    }),
+  );
+
+  await page.goto("/en");
+  await expect(page.getByText("Worldwide clicks: 100")).toBeVisible();
+  globalClicks = "101";
+  await expect(page.getByText("Worldwide clicks: 101")).toBeVisible({ timeout: 5_000 });
+});
+
+test("publishes visible localized history with canonical discovery metadata", async ({ page }) => {
+  await page.goto("/fr/history");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("années 2000");
+  await expect(page.getByText("166 secousses")).toBeVisible();
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/fr\/history$/);
+  await expect(page.locator('link[hreflang="en"]')).toHaveAttribute("href", /\/en\/history$/);
+  await expect(page.getByRole("link", { name: /Retour au bouton/ })).toHaveAttribute("href", "/fr");
+});
+
+test("exposes crawler policy and the complete international sitemap", async ({ request }) => {
+  const counter = await request.get("/api/counter");
+  expect(counter.headers()["vercel-cdn-cache-control"]).toContain("max-age=2");
+
+  const robots = await request.get("/robots.txt");
+  expect(await robots.text()).toContain("Disallow: /api/");
+
+  const sitemap = await request.get("/sitemap.xml");
+  const xml = await sitemap.text();
+  expect(xml).toContain("/en/history");
+  expect(xml).toContain("/zh-CN/history");
+  expect(xml).toContain('hreflang="fr"');
 });

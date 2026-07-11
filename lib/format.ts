@@ -13,6 +13,12 @@ export function incrementClicks(value: ClickValue): string {
   return (clickBigInt(value) + 1n).toString();
 }
 
+export function maxClicks(first: ClickValue, second: ClickValue): string {
+  const left = clickBigInt(first);
+  const right = clickBigInt(second);
+  return (left > right ? left : right).toString();
+}
+
 export function formatClicks(value: ClickValue, locale = "en"): string {
   return new Intl.NumberFormat(locale).format(clickBigInt(value));
 }

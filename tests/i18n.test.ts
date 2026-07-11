@@ -8,6 +8,7 @@ import {
   supportedLocale,
   supportedLocales,
 } from "@/lib/i18n";
+import { historyMessagesFor } from "@/lib/history-i18n";
 
 describe("locale negotiation", () => {
   it("respects quality weights and regional fallbacks", () => {
@@ -35,6 +36,17 @@ describe("translation catalogue", () => {
     for (const locale of supportedLocales) {
       expect(Object.keys(messagesFor(locale)).sort(), locale).toEqual(englishKeys);
       expect(messagesFor(locale).counter, locale).toContain("{count}");
+    }
+  });
+
+  it("ships complete, localized history copy for every public locale", () => {
+    const english = historyMessagesFor("en");
+    const keys = Object.keys(english).sort();
+    for (const locale of supportedLocales) {
+      const history = historyMessagesFor(locale);
+      expect(Object.keys(history).sort(), locale).toEqual(keys);
+      expect(Object.values(history).every((value) => value.trim().length > 0), locale).toBe(true);
+      if (locale !== "en") expect(history.original, locale).not.toBe(english.original);
     }
   });
 

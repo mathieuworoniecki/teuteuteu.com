@@ -12,7 +12,9 @@ Le fichier `public/teuteuteu.mp3`, les deux états PNG du bouton et la timeline 
 
 ## Supabase
 
-Appliquer toutes les migrations de `supabase/migrations/` dans l'ordre. La dernière active une purge quotidienne des empreintes anti-spam inactives depuis 48 heures. Les clés de service restent uniquement dans `.env.local` ou dans les variables chiffrées de Vercel.
+Appliquer toutes les migrations de `supabase/migrations/` dans l'ordre. La dernière répartit le compteur sur 64 fragments, active RLS sans accès public et purge chaque heure, par lots bornés, les empreintes inactives depuis deux heures. Les clés de service restent uniquement dans `.env.local` ou dans les variables chiffrées de Vercel.
+
+Le projet utilise Supabase Pro. Surveiller la latence du RPC, la taille de `click_rate_limits`, les connexions et la taille de la base. Les avis « RLS enabled with no policy » sont intentionnels : toutes les lectures publiques passent par les routes serveur utilisant `service_role`.
 
 ## Buy Me a Coffee
 
@@ -23,5 +25,7 @@ Le handler vérifie le corps brut avec `x-signature-sha256`, ignore les tests da
 ## Production Vercel
 
 La branche de production est `main`. GitHub Actions vérifie le projet et l'intégration Git Vercel crée automatiquement le déploiement de production. Vercel termine TLS, sert les assets via son CDN et fournit l'adresse visiteur normalisée, utilisée uniquement sous forme hachée pour limiter les rafales de clics.
+
+BotID Basic protège `POST /api/click` sans CAPTCHA visible. La règle WAF IP reste fixée à 60 requêtes par minute. `/api/counter` est mis en cache deux secondes au CDN et `/api/supporters` une minute. En incident, activer `CLICK_COUNTER_ENABLED=false` si le taux de 5xx dépasse 2 % pendant cinq minutes ou si le RPC dépasse une seconde au p95.
 
 Le build Docker de référence reste disponible avec `docker compose -f docker-compose.production.yml up --build`. En incident, définir `CLICK_COUNTER_ENABLED=false` dans Vercel permet de conserver le site en ligne sans nouvelle écriture Supabase.

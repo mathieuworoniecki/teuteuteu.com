@@ -1,5 +1,7 @@
 node_modules/
 .next/
+.next-docker/
+.next-playwright/
 tsconfig.tsbuildinfo
 out/
 .env.local

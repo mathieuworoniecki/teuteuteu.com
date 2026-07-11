@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { SupportExperience } from "@/components/support-experience";
-import { formatClicks, formatClicksDisplay, incrementClicks } from "@/lib/format";
+import { formatClicks, formatClicksDisplay, incrementClicks, maxClicks } from "@/lib/format";
 import { interpolate, type Messages, type SupportedLocale, type TextDirection } from "@/lib/i18n";
 import { LEGACY_DURATION_SECONDS, LEGACY_SHAKE_EVENTS, type LegacyShakeEvent } from "@/lib/legacy-timeline";
 import type { SupportMessages } from "@/lib/support-i18n";
@@ -16,9 +16,14 @@ const AUDIO_URL = "/teuteuteu.mp3";
 const FADE_SECONDS = 0.075;
 const MAX_EVENT_LATENCY_SECONDS = 0.15;
 const PRESS_FEEDBACK_MS = 420;
+const COUNTER_REFRESH_MS = 2_500;
+const COUNTER_JITTER_MS = 300;
+const RETRY_DELAYS_MS = [3_000, 6_000, 12_000, 30_000, 60_000] as const;
 
 type TeuteuteuMachineProps = {
   direction: TextDirection;
+  historyHref: string;
+  historyLabel: string;
   initialState: SiteState;
   locale: SupportedLocale;
   messages: Messages;
@@ -27,12 +32,15 @@ type TeuteuteuMachineProps = {
 
 export function TeuteuteuMachine({
   direction,
+  historyHref,
+  historyLabel,
   initialState,
   locale,
   messages,
   supportMessages,
 }: TeuteuteuMachineProps) {
   const [clicks, setClicks] = useState(initialState.clicks);
+  const [hasCounterValue, setHasCounterValue] = useState(initialState.configured);
   const [mode, setMode] = useState<PlaybackMode>("paused");
   const [audioError, setAudioError] = useState(false);
   const [isVisuallyPressed, setIsVisuallyPressed] = useState(false);
@@ -50,26 +58,71 @@ export function TeuteuteuMachine({
   const eventIndexRef = useRef(0);
   const lastTimelinePositionRef = useRef(0);
   const pressFeedbackTimerRef = useRef<number | null>(null);
+  const refreshTimerRef = useRef<number | null>(null);
+  const refreshAbortRef = useRef<AbortController | null>(null);
+  const refreshFailuresRef = useRef(0);
 
-  const refreshState = useCallback(async () => {
+  const refreshState = useCallback(async (signal?: AbortSignal) => {
     try {
-      const response = await fetch("/api/state", { cache: "no-store" });
-      if (!response.ok) return;
-      const state = (await response.json()) as SiteState;
-      setClicks(state.clicks);
+      const response = await fetch("/api/counter", { signal });
+      if (!response.ok) return false;
+      const state = (await response.json()) as Pick<SiteState, "clicks">;
+      setClicks((current) => maxClicks(current, state.clicks));
+      setHasCounterValue(true);
+      return true;
     } catch {
       // A stale count is less disruptive than an error surface on this page.
+      return false;
     }
   }, []);
 
   useEffect(() => {
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refreshState();
+    let disposed = false;
+
+    const clearRefresh = () => {
+      if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+      refreshAbortRef.current?.abort();
+      refreshAbortRef.current = null;
     };
-    const timer = window.setInterval(refreshWhenVisible, 60_000);
+
+    const schedule = (delay: number) => {
+      if (disposed || document.visibilityState !== "visible") return;
+      refreshTimerRef.current = window.setTimeout(runRefresh, delay);
+    };
+
+    const runRefresh = async () => {
+      if (disposed || document.visibilityState !== "visible") return;
+      const controller = new AbortController();
+      refreshAbortRef.current = controller;
+      const succeeded = await refreshState(controller.signal);
+      if (disposed || controller.signal.aborted) return;
+      refreshAbortRef.current = null;
+
+      if (succeeded) {
+        refreshFailuresRef.current = 0;
+        const jitter = Math.round((Math.random() * 2 - 1) * COUNTER_JITTER_MS);
+        schedule(COUNTER_REFRESH_MS + jitter);
+      } else {
+        const failure = Math.min(refreshFailuresRef.current, RETRY_DELAYS_MS.length - 1);
+        refreshFailuresRef.current += 1;
+        schedule(RETRY_DELAYS_MS[failure]);
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      clearRefresh();
+      if (document.visibilityState === "visible") {
+        refreshFailuresRef.current = 0;
+        void runRefresh();
+      }
+    };
+
     document.addEventListener("visibilitychange", refreshWhenVisible);
+    void runRefresh();
     return () => {
-      window.clearInterval(timer);
+      disposed = true;
+      clearRefresh();
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, [refreshState]);
@@ -86,6 +139,7 @@ export function TeuteuteuMachine({
 
   const countPress = useCallback(async () => {
     setClicks((current) => incrementClicks(current));
+    setHasCounterValue(true);
     try {
       const response = await fetch("/api/click", { method: "POST" });
       if (!response.ok) {
@@ -296,8 +350,12 @@ export function TeuteuteuMachine({
 
   const isPlaying = mode === "playing";
   const instruction = mode === "loading" ? messages.loading : messages.instruction;
-  const exactCounter = interpolate(messages.counter, { count: formatClicks(clicks, locale) });
-  const displayCounter = interpolate(messages.counter, { count: formatClicksDisplay(clicks, locale) });
+  const exactCounter = interpolate(messages.counter, {
+    count: hasCounterValue ? formatClicks(clicks, locale) : messages.loading,
+  });
+  const displayCounter = interpolate(messages.counter, {
+    count: hasCounterValue ? formatClicksDisplay(clicks, locale) : messages.loading,
+  });
 
   return (
     <section aria-label={messages.machineLabel} className="machine" dir={direction} lang={locale}>
@@ -322,12 +380,17 @@ export function TeuteuteuMachine({
       <p className="sr-only" role="status">
         {audioError ? messages.statusError : isPlaying ? messages.statusPlaying : messages.statusPaused}
       </p>
-      <SupportExperience
-        direction={direction}
-        key={supportResetToken}
-        messages={messages}
-        supportMessages={supportMessages}
-      />
+      <nav aria-label={historyLabel} className="site-links">
+        <SupportExperience
+          direction={direction}
+          key={supportResetToken}
+          messages={messages}
+          supportMessages={supportMessages}
+        />
+        <a className="history-link" href={historyHref}>
+          {historyLabel}
+        </a>
+      </nav>
     </section>
   );
 }

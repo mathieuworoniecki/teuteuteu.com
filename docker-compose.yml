@@ -9,6 +9,7 @@ services:
     environment:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      NEXT_DIST_DIR: ".next-docker"
     env_file:
       - path: .env.local
         required: false

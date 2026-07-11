@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
+import { checkBotId } from "botid/server";
 
+import { isAllowedClickOrigin } from "@/lib/click-request";
 import { incrementPreviewClicks } from "@/lib/preview-counter";
 import { readUtf8Body } from "@/lib/request";
 import { getSiteState } from "@/lib/site-state";
@@ -7,17 +9,6 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
-
-function isSameSiteOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  try {
-    const requestHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-    return Boolean(requestHost) && new URL(origin).host === requestHost;
-  } catch {
-    return false;
-  }
-}
 
 function visitorHash(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -27,11 +18,16 @@ function visitorHash(request: Request): string {
 }
 
 export async function POST(request: Request) {
-  if (!isSameSiteOrigin(request)) {
+  if (!isAllowedClickOrigin(request)) {
     return Response.json({ error: "Forbidden origin." }, { headers: NO_STORE_HEADERS, status: 403 });
   }
   if ((await readUtf8Body(request, 0)) === null) {
     return Response.json({ error: "Request body is not allowed." }, { headers: NO_STORE_HEADERS, status: 413 });
+  }
+
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return Response.json({ error: "Automated clicks are not counted." }, { headers: NO_STORE_HEADERS, status: 403 });
   }
 
   if (process.env.CLICK_COUNTER_ENABLED?.trim().toLowerCase() === "false") {

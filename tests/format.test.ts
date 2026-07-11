@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatClicks, formatClicksDisplay, incrementClicks, normaliseDonorName } from "@/lib/format";
+import { formatClicks, formatClicksDisplay, incrementClicks, maxClicks, normaliseDonorName } from "@/lib/format";
 
 describe("normaliseDonorName", () => {
   it("keeps a presentable name and compacts whitespace", () => {
@@ -19,6 +19,11 @@ describe("normaliseDonorName", () => {
 describe("large click counts", () => {
   it("increments beyond JavaScript's safe integer limit without losing precision", () => {
     expect(incrementClicks("9007199254740992")).toBe("9007199254740993");
+  });
+
+  it("never lets a stale distributed-cache response move the counter backwards", () => {
+    expect(maxClicks("9223372036854775806", "9223372036854775805")).toBe("9223372036854775806");
+    expect(maxClicks("41", "42")).toBe("42");
   });
 
   it("keeps an exact localized representation", () => {

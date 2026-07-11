@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>teuteuteu.com — offline</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; }
+      body { display: grid; place-items: center; color: #35a2ff; font-family: Tahoma, Verdana, sans-serif; }
+      main { display: grid; place-items: center; gap: 1.25rem; }
+      p { margin: 0; font-size: clamp(1rem, 2.4vw, 1.35rem); }
+      button {
+        width: clamp(5.45rem, 18vw, 7.5rem); aspect-ratio: 87 / 82; padding: 0; border: 0;
+        border-radius: 50%; cursor: pointer; background: transparent url('/button-up.png') center / 100% 100% no-repeat;
+      }
+      button:active { transform: translateY(.08rem); background-image: url('/button-down.png'); }
+      button:focus-visible { outline: .22rem dashed #35a2ff; outline-offset: .62rem; }
+      small { font-size: .68rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Press the button</p>
+      <button aria-label="Play teuteuteu" type="button"></button>
+      <small>Offline — the button still works.</small>
+    </main>
+    <script>
+      const button = document.querySelector('button');
+      button.addEventListener('click', () => {
+        const audio = new Audio('/teuteuteu.mp3');
+        audio.play().catch(() => {});
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+# teuteuteu.com
+
+teuteuteu.com is a faithful web restoration of a minimalist Flash artifact documented online by 2006.
+The original experience is one blue button, one absurd sound, and a precisely reconstructed sequence of 166 browser-window shakes.
+
+Primary pages:
+- https://www.teuteuteu.com/en
+- https://www.teuteuteu.com/en/history
+
+Restoration: Mathieu Woroniecki
+Source repository: https://github.com/mathieuworoniecki/teuteuteu.com
