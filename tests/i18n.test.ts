@@ -9,6 +9,7 @@ import {
   supportedLocales,
 } from "@/lib/i18n";
 import { historyMessagesFor } from "@/lib/history-i18n";
+import { historyResearchMessagesFor } from "@/lib/history-research-i18n";
 
 describe("locale negotiation", () => {
   it("respects quality weights and regional fallbacks", () => {
@@ -47,6 +48,7 @@ describe("translation catalogue", () => {
       expect(Object.keys(history).sort(), locale).toEqual(keys);
       expect(Object.values(history).every((value) => value.trim().length > 0), locale).toBe(true);
       if (locale !== "en") expect(history.original, locale).not.toBe(english.original);
+      expect(Object.values(historyResearchMessagesFor(locale)).every((value) => value.trim().length > 0), locale).toBe(true);
     }
   });
 

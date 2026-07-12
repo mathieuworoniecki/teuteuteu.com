@@ -178,6 +178,64 @@ a {
   padding-inline-start: 1.25rem;
 }
 
+.history-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-timeline > li {
+  position: relative;
+  padding: 0 0 2.25rem 1.7rem;
+  border-inline-start: 1px solid #b9dafa;
+}
+
+.history-timeline > li::before {
+  position: absolute;
+  top: 0.38rem;
+  inset-inline-start: -0.34rem;
+  width: 0.62rem;
+  height: 0.62rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #126fbd;
+  box-shadow: 0 0 0 1px #126fbd;
+  content: "";
+}
+
+.history-timeline time,
+.history-timeline > li > strong {
+  display: block;
+  color: #01246e;
+  font-weight: 700;
+}
+
+.history-timeline > li > span {
+  display: inline-block;
+  margin: 0.25rem 0 0.8rem;
+  color: #52606d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-timeline > li > p {
+  margin-bottom: 0.7rem;
+}
+
+.history-timeline > li > ul {
+  margin-bottom: 0;
+}
+
+.history-timeline__unknown {
+  border-inline-start-style: dashed !important;
+}
+
+.history-timeline__unknown::before {
+  background: #fff !important;
+}
+
 .history-page a {
   color: #126fbd;
   text-underline-offset: 0.17em;
@@ -212,7 +270,10 @@ a {
   line-height: 1.25;
   opacity: 0;
   pointer-events: none;
-  transition: left 135ms linear, top 135ms linear, opacity 100ms linear;
+  transition:
+    left 135ms linear,
+    top 135ms linear,
+    opacity 100ms linear;
 }
 
 .support-panel.is-visible {
@@ -221,7 +282,10 @@ a {
 
 .support-panel[data-state="evading"] {
   opacity: 0;
-  transition: left 260ms ease-in, top 260ms ease-in, opacity 180ms linear;
+  transition:
+    left 260ms ease-in,
+    top 260ms ease-in,
+    opacity 180ms linear;
 }
 
 .support-panel.is-interactive {
@@ -251,7 +315,10 @@ a {
   place-items: center;
   background: #d4d0c8;
   color: #000;
-  font: 700 0.75rem/0.75rem Tahoma, Verdana, sans-serif;
+  font:
+    700 0.75rem/0.75rem Tahoma,
+    Verdana,
+    sans-serif;
 }
 
 .support-panel__titlebar button:active {
@@ -402,7 +469,8 @@ a {
   margin: 0;
   padding: 0.65rem 0.2rem 0;
   list-style: none;
-  animation: donor-rise calc(max(16s, var(--donor-count, 8) * 2.5s)) linear infinite;
+  animation: donor-rise calc(max(16s, var(--donor-count, 8) * 2.5s)) linear
+    infinite;
 }
 
 .donor-stream li {

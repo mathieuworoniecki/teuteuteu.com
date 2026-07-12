@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 
 import { historyMessagesFor } from "@/lib/history-i18n";
-import { messagesFor, supportedLocales, type SupportedLocale } from "@/lib/i18n";
+import {
+  messagesFor,
+  supportedLocales,
+  type SupportedLocale,
+} from "@/lib/i18n";
 
-export const SITE_ORIGIN = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.teuteuteu.com");
+export const SITE_ORIGIN = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.teuteuteu.com",
+);
 export const RESTORER = {
   name: "Mathieu Woroniecki",
   url: "https://github.com/mathieuworoniecki",
@@ -22,10 +28,16 @@ export function languageAlternates(kind: "home" | "history") {
     locale,
     kind === "home" ? localeHomePath(locale) : localeHistoryPath(locale),
   ]);
-  return Object.fromEntries([...entries, ["x-default", kind === "home" ? "/" : "/en/history"]]);
+  return Object.fromEntries([
+    ...entries,
+    ["x-default", kind === "home" ? "/" : "/en/history"],
+  ]);
 }
 
-export function homeMetadata(locale: SupportedLocale, canonical: string): Metadata {
+export function homeMetadata(
+  locale: SupportedLocale,
+  canonical: string,
+): Metadata {
   const messages = messagesFor(locale);
   return {
     title: "teuteuteu.com",
@@ -39,7 +51,11 @@ export function homeMetadata(locale: SupportedLocale, canonical: string): Metada
       url: canonical,
       images: [`/api/og?lang=${encodeURIComponent(locale)}`],
     },
-    twitter: { card: "summary_large_image", title: "teuteuteu.com", description: messages.instruction },
+    twitter: {
+      card: "summary_large_image",
+      title: "teuteuteu.com",
+      description: messages.instruction,
+    },
   };
 }
 
@@ -48,16 +64,20 @@ export function historyMetadata(locale: SupportedLocale): Metadata {
   const canonical = localeHistoryPath(locale);
   return {
     title: `${messages.title} — teuteuteu.com`,
-    description: messages.original,
+    description: `${messages.original} ${messages.modern}`,
     alternates: { canonical, languages: languageAlternates("history") },
     openGraph: {
       title: messages.title,
-      description: messages.original,
+      description: `${messages.original} ${messages.modern}`,
       locale,
       type: "article",
       url: canonical,
       images: [`/api/og?lang=${encodeURIComponent(locale)}`],
     },
-    twitter: { card: "summary_large_image", title: messages.title, description: messages.original },
+    twitter: {
+      card: "summary_large_image",
+      title: messages.title,
+      description: `${messages.original} ${messages.modern}`,
+    },
   };
 }
