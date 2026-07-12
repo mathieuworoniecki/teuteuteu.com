@@ -9,11 +9,14 @@ import {
   supportedLocales,
 } from "@/lib/i18n";
 import { historyMessagesFor } from "@/lib/history-i18n";
+import { historyInterfaceMessagesFor } from "@/lib/history-interface-i18n";
 import { historyResearchMessagesFor } from "@/lib/history-research-i18n";
 
 describe("locale negotiation", () => {
   it("respects quality weights and regional fallbacks", () => {
-    expect(resolveAcceptLanguage("de-DE;q=0.7, fr-CA;q=0.9, en;q=0.5")).toBe("fr");
+    expect(resolveAcceptLanguage("de-DE;q=0.7, fr-CA;q=0.9, en;q=0.5")).toBe(
+      "fr",
+    );
     expect(resolveAcceptLanguage("pt-BR,pt;q=0.8")).toBe("pt-BR");
     expect(resolveAcceptLanguage("zh-Hant-HK,zh;q=0.8")).toBe("zh-TW");
   });
@@ -35,7 +38,9 @@ describe("translation catalogue", () => {
     expect(supportedLocales.length).toBeGreaterThanOrEqual(50);
     const englishKeys = Object.keys(messagesFor("en")).sort();
     for (const locale of supportedLocales) {
-      expect(Object.keys(messagesFor(locale)).sort(), locale).toEqual(englishKeys);
+      expect(Object.keys(messagesFor(locale)).sort(), locale).toEqual(
+        englishKeys,
+      );
       expect(messagesFor(locale).counter, locale).toContain("{count}");
     }
   });
@@ -46,9 +51,24 @@ describe("translation catalogue", () => {
     for (const locale of supportedLocales) {
       const history = historyMessagesFor(locale);
       expect(Object.keys(history).sort(), locale).toEqual(keys);
-      expect(Object.values(history).every((value) => value.trim().length > 0), locale).toBe(true);
-      if (locale !== "en") expect(history.original, locale).not.toBe(english.original);
-      expect(Object.values(historyResearchMessagesFor(locale)).every((value) => value.trim().length > 0), locale).toBe(true);
+      expect(
+        Object.values(history).every((value) => value.trim().length > 0),
+        locale,
+      ).toBe(true);
+      if (locale !== "en")
+        expect(history.original, locale).not.toBe(english.original);
+      expect(
+        Object.values(historyResearchMessagesFor(locale)).every(
+          (value) => value.trim().length > 0,
+        ),
+        locale,
+      ).toBe(true);
+      expect(
+        Object.values(historyInterfaceMessagesFor(locale)).every(
+          (value) => value.trim().length > 0,
+        ),
+        locale,
+      ).toBe(true);
     }
   });
 
@@ -59,8 +79,8 @@ describe("translation catalogue", () => {
   });
 
   it("interpolates counters without evaluating unknown placeholders", () => {
-    expect(interpolate("Worldwide clicks: {count} {unknown}", { count: "42" })).toBe(
-      "Worldwide clicks: 42 {unknown}",
-    );
+    expect(
+      interpolate("Worldwide clicks: {count} {unknown}", { count: "42" }),
+    ).toBe("Worldwide clicks: 42 {unknown}");
   });
 });

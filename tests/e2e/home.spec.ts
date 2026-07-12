@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("keeps the historical interaction accessible and scroll-free", async ({ page }) => {
+test("keeps the historical interaction accessible and scroll-free", async ({
+  page,
+}) => {
   await page.route("**/api/click", (route) =>
-    route.fulfill({ contentType: "application/json", body: JSON.stringify({ clicks: "42", limited: false }) }),
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ clicks: "42", limited: false }),
+    }),
   );
   await page.addInitScript(() => {
     const originalAnimate = Element.prototype.animate;
@@ -15,13 +20,14 @@ test("keeps the historical interaction accessible and scroll-free", async ({ pag
   });
   await page.goto("/");
 
-  await expect(page.getByRole("button", { name: "Play teuteuteu" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Play teuteuteu" }),
+  ).toBeVisible();
   const button = page.locator(".teu-button");
   await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
-  await expect(page.getByRole("link", { name: "A teu for hosting?" })).toHaveAttribute(
-    "href",
-    "https://buymeacoffee.com/alzok",
-  );
+  await expect(
+    page.getByRole("link", { name: "A teu for hosting?" }),
+  ).toHaveAttribute("href", "https://buymeacoffee.com/alzok");
 
   await button.click();
   await expect(button).toHaveClass(/is-pressed/);
@@ -29,11 +35,19 @@ test("keeps the historical interaction accessible and scroll-free", async ({ pag
   await expect(button).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText("Press the button")).toBeVisible();
   await expect
-    .poll(() => page.evaluate(() => (window as unknown as { __legacyShakeCount: number }).__legacyShakeCount))
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __legacyShakeCount: number })
+            .__legacyShakeCount,
+      ),
+    )
     .toBeGreaterThan(0);
 });
 
-test("detects browser languages and supports right-to-left copy", async ({ browser }) => {
+test("detects browser languages and supports right-to-left copy", async ({
+  browser,
+}) => {
   const french = await browser.newContext({ locale: "fr-FR" });
   const frenchPage = await french.newPage();
   await frenchPage.goto("/");
@@ -50,15 +64,22 @@ test("detects browser languages and supports right-to-left copy", async ({ brows
   await arabic.close();
 });
 
-test("allows a supported language override without adding interface chrome", async ({ page }) => {
+test("allows a supported language override without adding interface chrome", async ({
+  page,
+}) => {
   await page.goto("/?lang=ja");
   await expect(page.locator("main")).toHaveAttribute("lang", "ja");
   await expect(page.getByText("ボタンを押して")).toBeVisible();
 });
 
-test("plays two support-panel evasions and then becomes stable", async ({ page }) => {
+test("plays two support-panel evasions and then becomes stable", async ({
+  page,
+}) => {
   await page.goto("/");
-  const link = page.getByRole("link", { name: "A teu for hosting?", exact: true });
+  const link = page.getByRole("link", {
+    name: "A teu for hosting?",
+    exact: true,
+  });
   const panel = page.locator(".support-panel");
 
   await link.hover();
@@ -66,7 +87,9 @@ test("plays two support-panel evasions and then becomes stable", async ({ page }
   await expect(panel).toHaveAttribute("data-evasions", "1", { timeout: 4_000 });
   await expect(page.getByText("Are you sure?")).toBeVisible({ timeout: 2_000 });
   await expect(panel).toHaveAttribute("data-evasions", "2", { timeout: 4_000 });
-  await expect(panel).toHaveAttribute("data-state", "stable", { timeout: 2_000 });
+  await expect(panel).toHaveAttribute("data-state", "stable", {
+    timeout: 2_000,
+  });
   await expect(page.getByText("A tiny tip for my kibble?")).toBeVisible();
 
   const box = await panel.boundingBox();
@@ -82,11 +105,16 @@ test("plays two support-panel evasions and then becomes stable", async ({ page }
   await expect(panel).toHaveAttribute("data-state", "closed");
 });
 
-test("opens support costs accessibly for keyboard and reduced motion", async ({ browser }) => {
+test("opens support costs accessibly for keyboard and reduced motion", async ({
+  browser,
+}) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.goto("/");
-  const link = page.getByRole("link", { name: "A teu for hosting?", exact: true });
+  const link = page.getByRole("link", {
+    name: "A teu for hosting?",
+    exact: true,
+  });
   const panel = page.locator(".support-panel");
 
   await link.focus();
@@ -104,34 +132,95 @@ test("opens support costs accessibly for keyboard and reduced motion", async ({ 
   await context.close();
 });
 
-test("refreshes the global counter without requiring a local click", async ({ page }) => {
+test("refreshes the global counter without requiring a local click", async ({
+  page,
+}) => {
   let globalClicks = "100";
   await page.route("**/api/counter", (route) =>
     route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ clicks: globalClicks, configured: true, updatedAt: new Date().toISOString() }),
+      body: JSON.stringify({
+        clicks: globalClicks,
+        configured: true,
+        updatedAt: new Date().toISOString(),
+      }),
     }),
   );
 
   await page.goto("/en");
   await expect(page.getByText("Worldwide clicks: 100")).toBeVisible();
   globalClicks = "101";
-  await expect(page.getByText("Worldwide clicks: 101")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText("Worldwide clicks: 101")).toBeVisible({
+    timeout: 5_000,
+  });
 });
 
-test("publishes visible localized history with canonical discovery metadata", async ({ page }) => {
+test("publishes visible localized history with canonical discovery metadata", async ({
+  page,
+}) => {
   await page.goto("/fr/history");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("années 2000");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "années 2000",
+  );
   await expect(page.getByText("166 secousses")).toBeVisible();
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/fr\/history$/);
-  await expect(page.locator('link[hreflang="en"]')).toHaveAttribute("href", /\/en\/history$/);
-  await expect(page.getByRole("link", { name: /Retour au bouton/ })).toHaveAttribute("href", "/fr");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/fr\/history$/,
+  );
+  await expect(page.locator('link[hreflang="en"]')).toHaveAttribute(
+    "href",
+    /\/en\/history$/,
+  );
+  await expect(
+    page.getByRole("link", { name: /Retour au bouton/ }).first(),
+  ).toHaveAttribute("href", "/fr");
+  await expect(page.locator("details[data-history-event]")).toHaveCount(16);
+  await expect(page.locator('[id="2005-swf"]')).toHaveAttribute("open", "");
+  await expect(page.locator(".history-unknown")).toContainText(
+    "Ce qui reste inconnu",
+  );
 });
 
-test("exposes crawler policy and the complete international sitemap", async ({ request }) => {
+test("makes the full history progressively interactive and linkable", async ({
+  page,
+}) => {
+  await page.goto("/en/history#2011-tomware");
+  const lead = page.locator('[id="2011-tomware"]');
+  await expect(lead).toHaveAttribute("open", "");
+  await expect(lead).toContainText(
+    "Later access does not establish 2005 authorship",
+  );
+
+  await page.getByRole("button", { name: "Close all" }).click();
+  await expect(page.locator("details[data-history-event][open]")).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: "Open all" }).click();
+  await expect(page.locator("details[data-history-event][open]")).toHaveCount(
+    16,
+  );
+});
+
+test("keeps the 2005 archive readable without horizontal overflow on mobile", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto("/fr/history");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.locator('[id="2005-first-capture"] summary')).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
+test("exposes crawler policy and the complete international sitemap", async ({
+  request,
+}) => {
   const counter = await request.get("/api/counter");
-  expect(counter.headers()["vercel-cdn-cache-control"]).toContain("max-age=2");
+  expect(counter.headers()["vercel-cdn-cache-control"]).toContain("s-maxage=2");
 
   const robots = await request.get("/robots.txt");
   expect(await robots.text()).toContain("Disallow: /api/");
