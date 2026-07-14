@@ -28,6 +28,29 @@ Already in place:
 
 The baseline should be preserved by automated tests on every deployment.
 
+## Implementation status — 14 July 2026
+
+Implemented in the first optimization wave:
+
+- answer-first, localized history summary and visible evidence methodology;
+- dedicated history social card and stronger localized metadata;
+- corrected Schema.org graph separating the 2005 artifact from the 2026 article;
+- static public JSON source ledger with hashes, events, statuses, and citations;
+- explicit `OAI-SearchBot` access while keeping database APIs excluded;
+- editorial modification dates shared by metadata and the sitemap;
+- IndexNow notification after successful Vercel production deployments only;
+- GitHub and Vercel `INDEXNOW_KEY` configuration;
+- automated tests for crawler policy, structured data, the source ledger, social
+  image generation, mobile, RTL, and international discovery.
+
+Still requires owner access or editorial work:
+
+- Google Search Console and Bing Webmaster verification tokens;
+- submission and URL inspection in both dashboards;
+- native-speaker quality classification for all indexed locales;
+- preservation-community outreach, press material, and earned citations;
+- recurring measurement and correction reviews.
+
 ## Priority 0 — make indexing measurable and trustworthy
 
 ### 1. Search engine ownership and diagnostics
@@ -259,4 +282,3 @@ search engines and answer engines cite when they explain what `teuteuteu.com` wa
 - OpenAI, “Publishers and Developers — FAQ”:
   <https://help.openai.com/en/articles/12627856-publishers-and-developers-faq>
 - IndexNow protocol documentation: <https://www.indexnow.org/documentation>
-

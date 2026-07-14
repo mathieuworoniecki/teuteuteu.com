@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { historyMessagesFor } from "@/lib/history-i18n";
 import { historyStoryMessagesFor } from "@/lib/history-story-i18n";
 import {
   messagesFor,
@@ -14,6 +15,9 @@ export const RESTORER = {
   name: "Mathieu Woroniecki",
   url: "https://github.com/mathieuworoniecki",
 } as const;
+export const HOME_MODIFIED_AT = "2026-07-14";
+export const HISTORY_PUBLISHED_AT = "2026-07-10";
+export const HISTORY_MODIFIED_AT = "2026-07-14";
 
 export function localeHomePath(locale: SupportedLocale) {
   return `/${locale}`;
@@ -55,29 +59,35 @@ export function homeMetadata(
       card: "summary_large_image",
       title: "teuteuteu.com",
       description: messages.instruction,
+      images: [`/api/og?lang=${encodeURIComponent(locale)}`],
     },
   };
 }
 
 export function historyMetadata(locale: SupportedLocale): Metadata {
-  const messages = historyStoryMessagesFor(locale);
+  const story = historyStoryMessagesFor(locale);
+  const messages = historyMessagesFor(locale);
   const canonical = localeHistoryPath(locale);
+  const image = `/api/og?lang=${encodeURIComponent(locale)}&page=history`;
   return {
-    title: `${messages.title} — teuteuteu.com`,
-    description: messages.intro,
+    title: messages.title,
+    description: messages.original,
     alternates: { canonical, languages: languageAlternates("history") },
     openGraph: {
       title: messages.title,
-      description: messages.intro,
+      description: messages.original,
       locale,
       type: "article",
       url: canonical,
-      images: [`/api/og?lang=${encodeURIComponent(locale)}`],
+      publishedTime: HISTORY_PUBLISHED_AT,
+      modifiedTime: HISTORY_MODIFIED_AT,
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title: messages.title,
-      description: messages.intro,
+      description: story.intro,
+      images: [image],
     },
   };
 }

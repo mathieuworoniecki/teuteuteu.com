@@ -26,6 +26,10 @@ Le handler vérifie le corps brut avec `x-signature-sha256`, ignore les tests da
 
 La branche de production est `main`. GitHub Actions vérifie le projet et l'intégration Git Vercel crée automatiquement le déploiement de production. Vercel termine TLS, sert les assets via son CDN et fournit l'adresse visiteur normalisée, utilisée uniquement sous forme hachée pour limiter les rafales de clics.
 
+Le workflow `Notify IndexNow` s'exécute uniquement après un déploiement Vercel marqué `Production` et réussi. Il sélectionne les URL éditoriales concernées depuis le sitemap et ne réagit jamais aux clics du compteur. La variable Vercel `INDEXNOW_KEY` et le secret GitHub Actions du même nom doivent avoir exactement la même valeur. La route `/indexnow-key` expose cette valeur à IndexNow et répond `404` lorsqu'elle n'est pas configurée.
+
+Les balises de validation Google et Bing utilisent respectivement `GOOGLE_SITE_VERIFICATION` et `BING_SITE_VERIFICATION`. Après leur ajout dans Vercel, soumettre `https://www.teuteuteu.com/sitemap.xml` dans les deux consoles et inspecter au minimum `/en/history` et `/fr/history`.
+
 BotID Basic protège `POST /api/click` sans CAPTCHA visible. La règle WAF IP reste fixée à 60 requêtes par minute. `/api/counter` est mis en cache deux secondes au CDN et `/api/supporters` une minute. En incident, activer `CLICK_COUNTER_ENABLED=false` si le taux de 5xx dépasse 2 % pendant cinq minutes ou si le RPC dépasse une seconde au p95.
 
 Le build Docker de référence reste disponible avec `docker compose -f docker-compose.production.yml up --build`. En incident, définir `CLICK_COUNTER_ENABLED=false` dans Vercel permet de conserver le site en ligne sans nouvelle écriture Supabase.

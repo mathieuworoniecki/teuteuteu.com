@@ -1,0 +1,29 @@
+name: Notify IndexNow
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+          ref: ${{ github.event.deployment.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Select changed public files
+        run: git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/changed-files.txt"
+      - name: Notify participating search engines
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          NEXT_PUBLIC_SITE_URL: https://www.teuteuteu.com
+        run: node scripts/notify-indexnow.mjs "$RUNNER_TEMP/changed-files.txt"

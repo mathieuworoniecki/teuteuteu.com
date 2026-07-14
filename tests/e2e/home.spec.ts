@@ -163,7 +163,9 @@ test("publishes visible localized history with canonical discovery metadata", as
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "bouton bleu",
   );
-  await expect(page.getByText("166 secousses")).toBeVisible();
+  await expect(
+    page.locator(".history-brief").getByText("166 secousses"),
+  ).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     /\/fr\/history$/,
@@ -177,8 +179,23 @@ test("publishes visible localized history with canonical discovery metadata", as
   ).toHaveAttribute("href", "/fr");
   await expect(page.locator("[data-history-chapter]")).toHaveCount(5);
   await expect(page.locator(".history-archive")).toHaveCount(5);
+  await expect(page.locator(".history-methodology")).toContainText(
+    "Aucune source publique fiable",
+  );
   await expect(page.locator(".history-mystery")).toContainText(
     "Qui a créé teuteuteu.com",
+  );
+
+  const structuredData = JSON.parse(
+    (await page.locator('script[type="application/ld+json"]').textContent()) ??
+      "{}",
+  );
+  expect(structuredData["@graph"]).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ "@type": "Article" }),
+      expect.objectContaining({ "@type": "CreativeWork" }),
+      expect.objectContaining({ "@type": "Dataset" }),
+    ]),
   );
 });
 
@@ -247,11 +264,28 @@ test("exposes crawler policy and the complete international sitemap", async ({
   expect(counter.headers()["vercel-cdn-cache-control"]).toContain("s-maxage=2");
 
   const robots = await request.get("/robots.txt");
-  expect(await robots.text()).toContain("Disallow: /api/");
+  const robotsText = await robots.text();
+  expect(robotsText).toContain("User-Agent: OAI-SearchBot");
+  expect(robotsText).toContain("Allow: /api/og");
+  expect(robotsText).toContain("Disallow: /api/");
 
   const sitemap = await request.get("/sitemap.xml");
   const xml = await sitemap.text();
   expect(xml).toContain("/en/history");
   expect(xml).toContain("/zh-CN/history");
   expect(xml).toContain('hreflang="fr"');
+  expect(xml).toContain("2026-07-14");
+
+  const ledgerResponse = await request.get("/history-sources.json");
+  expect(ledgerResponse.ok()).toBe(true);
+  expect(ledgerResponse.headers()["content-type"]).toContain(
+    "application/json",
+  );
+  const ledger = await ledgerResponse.json();
+  expect(ledger.scope.originalCreator).toBe("unknown");
+  expect(ledger.artifact.shakeCalls).toBe(166);
+
+  const historyCard = await request.get("/api/og?lang=fr&page=history");
+  expect(historyCard.ok()).toBe(true);
+  expect(historyCard.headers()["content-type"]).toContain("image/png");
 });
