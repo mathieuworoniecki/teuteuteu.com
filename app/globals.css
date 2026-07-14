@@ -281,15 +281,16 @@ a {
 .history-chapter {
   position: relative;
   display: grid;
-  min-height: 44rem;
+  min-height: 38rem;
   scroll-margin-top: 1rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
     "scene copy"
     "archive archive";
-  gap: clamp(2rem, 6vw, 6rem);
+  column-gap: clamp(2rem, 6vw, 6rem);
+  row-gap: 1.25rem;
   align-items: center;
-  padding: clamp(5rem, 12vh, 9rem) 0;
+  padding: clamp(3.75rem, 8vh, 6rem) 0;
   border-bottom: 1px dotted #9fc8eb;
 }
 
@@ -766,8 +767,8 @@ a {
       "scene"
       "copy"
       "archive";
-    gap: 1.4rem;
-    padding: 5rem 0 4rem 1rem;
+    gap: 1.15rem;
+    padding: 3.75rem 0 3.25rem 1rem;
   }
   .history-chapter:nth-child(even) {
     grid-template-areas:
