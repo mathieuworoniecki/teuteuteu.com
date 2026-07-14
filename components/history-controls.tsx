@@ -2,30 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-type HistoryControlsProps = {
-  closeAll: string;
-  linkCopied: string;
-  openAll: string;
-};
+type HistoryControlsProps = { linkCopied: string };
 
-const detailsSelector = "details[data-history-event]";
-
-export function HistoryControls({
-  closeAll,
-  linkCopied,
-  openAll,
-}: HistoryControlsProps) {
+export function HistoryControls({ linkCopied }: HistoryControlsProps) {
   const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     const revealHash = () => {
       const id = decodeURIComponent(window.location.hash.slice(1));
       if (!id) return;
-      const event = document.getElementById(id);
-      if (!(event instanceof HTMLDetailsElement)) return;
-      event.open = true;
-      event.querySelector("summary")?.focus({ preventScroll: true });
-      event.scrollIntoView({ behavior: "smooth", block: "start" });
+      const target = document.getElementById(id);
+      if (!target) return;
+      const archive = target.closest("details");
+      if (archive instanceof HTMLDetailsElement) archive.open = true;
+      target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     const copyEventLink = async (event: MouseEvent) => {
@@ -53,35 +45,40 @@ export function HistoryControls({
       window.setTimeout(() => setAnnouncement(linkCopied), 10);
     };
 
+    const chapters = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-history-chapter]"),
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const active = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!active) return;
+        document
+          .querySelectorAll<HTMLElement>("[data-history-nav]")
+          .forEach((link) => {
+            if (link.getAttribute("href") === `#${active.target.id}`)
+              link.setAttribute("aria-current", "step");
+            else link.removeAttribute("aria-current");
+          });
+      },
+      { rootMargin: "-35% 0px -50%", threshold: [0, 0.2, 0.5] },
+    );
+
     revealHash();
+    chapters.forEach((chapter) => observer.observe(chapter));
     window.addEventListener("hashchange", revealHash);
     document.addEventListener("click", copyEventLink);
     return () => {
+      observer.disconnect();
       window.removeEventListener("hashchange", revealHash);
       document.removeEventListener("click", copyEventLink);
     };
   }, [linkCopied]);
 
-  const setAll = (open: boolean) => {
-    document
-      .querySelectorAll<HTMLDetailsElement>(detailsSelector)
-      .forEach((details) => {
-        details.open = open;
-      });
-  };
-
   return (
-    <div className="history-controls">
-      <button onClick={() => setAll(true)} type="button">
-        {openAll}
-      </button>
-      <span aria-hidden="true">·</span>
-      <button onClick={() => setAll(false)} type="button">
-        {closeAll}
-      </button>
-      <span aria-atomic="true" aria-live="polite" className="sr-only">
-        {announcement}
-      </span>
-    </div>
+    <span aria-atomic="true" aria-live="polite" className="sr-only">
+      {announcement}
+    </span>
   );
 }

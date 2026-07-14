@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { historyMessagesFor } from "@/lib/history-i18n";
+import { historyStoryMessagesFor } from "@/lib/history-story-i18n";
 import {
   messagesFor,
   supportedLocales,
@@ -60,15 +60,15 @@ export function homeMetadata(
 }
 
 export function historyMetadata(locale: SupportedLocale): Metadata {
-  const messages = historyMessagesFor(locale);
+  const messages = historyStoryMessagesFor(locale);
   const canonical = localeHistoryPath(locale);
   return {
     title: `${messages.title} — teuteuteu.com`,
-    description: `${messages.original} ${messages.modern}`,
+    description: messages.intro,
     alternates: { canonical, languages: languageAlternates("history") },
     openGraph: {
       title: messages.title,
-      description: `${messages.original} ${messages.modern}`,
+      description: messages.intro,
       locale,
       type: "article",
       url: canonical,
@@ -77,7 +77,7 @@ export function historyMetadata(locale: SupportedLocale): Metadata {
     twitter: {
       card: "summary_large_image",
       title: messages.title,
-      description: `${messages.original} ${messages.modern}`,
+      description: messages.intro,
     },
   };
 }

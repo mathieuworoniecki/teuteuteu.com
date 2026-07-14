@@ -161,7 +161,7 @@ test("publishes visible localized history with canonical discovery metadata", as
   await page.goto("/fr/history");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "années 2000",
+    "bouton bleu",
   );
   await expect(page.getByText("166 secousses")).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -175,10 +175,10 @@ test("publishes visible localized history with canonical discovery metadata", as
   await expect(
     page.getByRole("link", { name: /Retour au bouton/ }).first(),
   ).toHaveAttribute("href", "/fr");
-  await expect(page.locator("details[data-history-event]")).toHaveCount(16);
-  await expect(page.locator('[id="2005-swf"]')).toHaveAttribute("open", "");
-  await expect(page.locator(".history-unknown")).toContainText(
-    "Ce qui reste inconnu",
+  await expect(page.locator("[data-history-chapter]")).toHaveCount(5);
+  await expect(page.locator(".history-archive")).toHaveCount(5);
+  await expect(page.locator(".history-mystery")).toContainText(
+    "Qui a créé teuteuteu.com",
   );
 });
 
@@ -187,19 +187,14 @@ test("makes the full history progressively interactive and linkable", async ({
 }) => {
   await page.goto("/en/history#2011-tomware");
   const lead = page.locator('[id="2011-tomware"]');
-  await expect(lead).toHaveAttribute("open", "");
+  await expect(
+    page.locator('.history-archive:has([id="2011-tomware"])'),
+  ).toHaveAttribute("open", "");
   await expect(lead).toContainText(
     "Later access does not establish 2005 authorship",
   );
-
-  await page.getByRole("button", { name: "Close all" }).click();
-  await expect(page.locator("details[data-history-event][open]")).toHaveCount(
-    0,
-  );
-  await page.getByRole("button", { name: "Open all" }).click();
-  await expect(page.locator("details[data-history-event][open]")).toHaveCount(
-    16,
-  );
+  await page.locator('[data-history-nav][href="#chapter-restoration"]').click();
+  await expect(page).toHaveURL(/#chapter-restoration$/);
 });
 
 test("keeps the 2005 archive readable without horizontal overflow on mobile", async ({
@@ -208,7 +203,22 @@ test("keeps the 2005 archive readable without horizontal overflow on mobile", as
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("/fr/history");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.locator('[id="2005-first-capture"] summary')).toBeVisible();
+  await expect(page.locator(".history-archive summary").first()).toBeVisible();
+  await expect(page.locator(".history-pixel-scene").first()).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
+test("mirrors the illustrated history safely for right-to-left locales", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/ar/history");
+  await expect(page.locator("main.history-page")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator("[data-history-chapter]")).toHaveCount(5);
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,

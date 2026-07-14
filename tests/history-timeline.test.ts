@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { HISTORY_CHAPTERS } from "@/lib/history-chapters";
 import {
   EARLIEST_DOCUMENTED_DATE,
   HISTORY_EVENTS,
@@ -49,5 +50,17 @@ describe("documented site history", () => {
         ).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("assigns every evidence event to exactly one public chapter", () => {
+    expect(HISTORY_CHAPTERS).toHaveLength(5);
+    const chapterEventIds = HISTORY_CHAPTERS.flatMap(
+      (chapter) => chapter.eventIds,
+    );
+    expect(chapterEventIds).toHaveLength(HISTORY_EVENTS.length);
+    expect(new Set(chapterEventIds).size).toBe(HISTORY_EVENTS.length);
+    expect(new Set(chapterEventIds)).toEqual(
+      new Set(HISTORY_EVENTS.map((event) => event.id)),
+    );
   });
 });

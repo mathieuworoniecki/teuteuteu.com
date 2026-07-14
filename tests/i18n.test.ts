@@ -11,6 +11,7 @@ import {
 import { historyMessagesFor } from "@/lib/history-i18n";
 import { historyInterfaceMessagesFor } from "@/lib/history-interface-i18n";
 import { historyResearchMessagesFor } from "@/lib/history-research-i18n";
+import { historyStoryMessagesFor } from "@/lib/history-story-i18n";
 
 describe("locale negotiation", () => {
   it("respects quality weights and regional fallbacks", () => {
@@ -66,6 +67,20 @@ describe("translation catalogue", () => {
       expect(
         Object.values(historyInterfaceMessagesFor(locale)).every(
           (value) => value.trim().length > 0,
+        ),
+        locale,
+      ).toBe(true);
+      const story = historyStoryMessagesFor(locale);
+      expect(story.title.trim().length, locale).toBeGreaterThan(0);
+      expect(Object.keys(story.chapters), locale).toHaveLength(5);
+      expect(
+        Object.values(story.chapters).every(
+          (chapter) =>
+            chapter.title.trim().length > 0 &&
+            chapter.paragraphs.every(
+              (paragraph) => paragraph.trim().length > 0,
+            ) &&
+            chapter.fact.trim().length > 0,
         ),
         locale,
       ).toBe(true);

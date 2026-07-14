@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { HistoryControls } from "@/components/history-controls";
+import { HistoryPixelScene } from "@/components/history-pixel-scene";
+import { HISTORY_CHAPTERS } from "@/lib/history-chapters";
 import { historyInterfaceMessagesFor } from "@/lib/history-interface-i18n";
 import { historyMessagesFor } from "@/lib/history-i18n";
 import { historyResearchMessagesFor } from "@/lib/history-research-i18n";
+import { historyStoryMessagesFor } from "@/lib/history-story-i18n";
 import {
   EARLIEST_DOCUMENTED_DATE,
   HISTORY_EVENTS,
   HISTORY_SOURCES,
   type HistoryEvent,
-  type HistoryPeriod,
   type HistoryStatus,
 } from "@/lib/history-timeline";
 import { directionFor, supportedLocale, supportedLocales } from "@/lib/i18n";
@@ -22,14 +24,6 @@ import {
 } from "@/lib/seo";
 
 type HistoryPageProps = { params: Promise<{ locale: string }> };
-
-const periods: readonly HistoryPeriod[] = [
-  "origins",
-  "viral",
-  "parking",
-  "blog",
-  "restoration",
-];
 
 export const dynamicParams = false;
 
@@ -56,41 +50,30 @@ function exactDate(locale: string, event: HistoryEvent) {
 export default async function HistoryPage({ params }: HistoryPageProps) {
   const locale = supportedLocale((await params).locale);
   if (!locale) notFound();
+
   const messages = historyMessagesFor(locale);
   const research = historyResearchMessagesFor(locale);
   const ui = historyInterfaceMessagesFor(locale);
+  const story = historyStoryMessagesFor(locale);
   const pageUrl = new URL(`/${locale}/history`, SITE_ORIGIN).toString();
-  const periodLabels: Record<HistoryPeriod, string> = {
-    origins: ui.origins,
-    viral: ui.viral,
-    parking: ui.parking,
-    blog: ui.blog,
-    restoration: ui.restoration,
-  };
   const statusLabels: Record<HistoryStatus, string> = {
     confirmed: ui.confirmed,
     lead: ui.lead,
     context: ui.context,
   };
-  const periodSynopsis: Record<HistoryPeriod, string> = {
-    origins: messages.original,
-    viral: research.circulation,
-    parking: research.parking,
-    blog: research.blog,
-    restoration: messages.modern,
-  };
+  const eventById = new Map(HISTORY_EVENTS.map((event) => [event.id, event]));
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Article",
-        headline: messages.title,
-        description: messages.original,
+        headline: story.title,
+        description: story.intro,
         url: pageUrl,
         inLanguage: locale,
         dateCreated: EARLIEST_DOCUMENTED_DATE,
         datePublished: "2026-07-10",
-        dateModified: "2026-07-12",
+        dateModified: "2026-07-14",
         author: {
           "@type": "Person",
           name: RESTORER.name,
@@ -100,16 +83,13 @@ export default async function HistoryPage({ params }: HistoryPageProps) {
       },
       {
         "@type": "ItemList",
-        name: research.timeline,
-        numberOfItems: HISTORY_EVENTS.length,
-        itemListElement: HISTORY_EVENTS.map((event, index) => ({
+        name: story.title,
+        numberOfItems: HISTORY_CHAPTERS.length,
+        itemListElement: HISTORY_CHAPTERS.map((chapter, index) => ({
           "@type": "ListItem",
           position: index + 1,
-          url: `${pageUrl}#${event.id}`,
-          name: event.title,
-          ...(event.dateTime && /^\d{4}-\d{2}-\d{2}$/.test(event.dateTime)
-            ? { dateCreated: event.dateTime }
-            : {}),
+          url: `${pageUrl}#chapter-${chapter.id}`,
+          name: story.chapters[chapter.id].title,
         })),
       },
     ],
@@ -123,158 +103,171 @@ export default async function HistoryPage({ params }: HistoryPageProps) {
         }}
         type="application/ld+json"
       />
-      <article>
-        <header className="history-header">
-          <a
-            className="history-page__back history-page__back--top"
-            href={localeHomePath(locale)}
-          >
+      <HistoryControls linkCopied={ui.linkCopied} />
+
+      <article className="history-story">
+        <header className="history-story__hero">
+          <a className="history-page__back" href={localeHomePath(locale)}>
             ← {messages.back}
           </a>
-          <h1>{messages.title}</h1>
-          <p>{messages.original}</p>
-          <p>{messages.restoration}</p>
+          <div className="history-story__hero-copy">
+            <p className="history-story__year">2005 → 2026</p>
+            <h1>{story.title}</h1>
+            <p className="history-story__intro">{story.intro}</p>
+            <p className="history-story__duration">{story.duration}</p>
+          </div>
+          <nav aria-label={ui.periods} className="history-story__nav">
+            {HISTORY_CHAPTERS.map((chapter, index) => (
+              <a
+                data-history-nav
+                href={`#chapter-${chapter.id}`}
+                key={chapter.id}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                {story.chapters[chapter.id].title}
+              </a>
+            ))}
+          </nav>
         </header>
 
-        <aside
-          aria-labelledby="history-unknown-title"
-          className="history-unknown"
-        >
-          <h2 id="history-unknown-title">? {ui.unknown}</h2>
-          <p>{research.unresolved}</p>
-          <p>
-            <code>premierecompagnie.free.fr</code> · <code>tututete</code> ·{" "}
-            <code>pub-7619547521109019</code> · <code>r=15576</code>
-          </p>
-        </aside>
-
-        <nav aria-label={ui.periods} className="history-periods">
-          <span>{ui.periods}:</span>
-          {periods.map((period) => (
-            <a href={`#period-${period}`} key={period}>
-              {periodLabels[period]}
-            </a>
-          ))}
-        </nav>
-
-        <div className="history-timeline-heading">
-          <h2>{research.timeline}</h2>
-          <HistoryControls
-            closeAll={ui.closeAll}
-            linkCopied={ui.linkCopied}
-            openAll={ui.openAll}
-          />
-        </div>
-
-        <div className="history-timeline">
-          {periods.map((period) => {
-            const events = HISTORY_EVENTS.filter(
-              (event) => event.period === period,
-            );
+        <div className="history-story__chapters">
+          {HISTORY_CHAPTERS.map((chapter, index) => {
+            const copy = story.chapters[chapter.id];
+            const events = chapter.eventIds.map((eventId) => {
+              const event = eventById.get(eventId);
+              if (!event) throw new Error(`Unknown history event: ${eventId}`);
+              return event;
+            });
             return (
               <section
-                aria-labelledby={`period-${period}-title`}
-                className="history-period"
-                id={`period-${period}`}
-                key={period}
+                aria-labelledby={`chapter-${chapter.id}-title`}
+                className="history-chapter"
+                data-history-chapter
+                id={`chapter-${chapter.id}`}
+                key={chapter.id}
               >
-                <h3 id={`period-${period}-title`}>{periodLabels[period]}</h3>
-                <ol>
-                  {events.map((event) => (
-                    <li key={event.id}>
-                      <details
-                        data-history-event
-                        id={event.id}
-                        open={event.open}
-                      >
-                        <summary>
-                          <span className="history-event__date">
-                            {event.dateTime ? (
-                              <time dateTime={event.dateTime}>
-                                {exactDate(locale, event)}
-                              </time>
-                            ) : (
-                              event.dateLabel
-                            )}
-                          </span>
-                          <span
-                            className={`history-status history-status--${event.status}`}
-                          >
-                            {statusLabels[event.status]}
-                          </span>
-                          <strong>{event.title}</strong>
-                          <span className="history-event__synopsis">
-                            {periodSynopsis[event.period]}
-                          </span>
-                          <span className="sr-only history-event__show">
-                            {ui.showDetails}
-                          </span>
-                          <span className="sr-only history-event__hide">
-                            {ui.hideDetails}
-                          </span>
-                        </summary>
-                        <div className="history-event__body">
-                          <section>
-                            <h4>{ui.known}</h4>
-                            <p>{periodSynopsis[event.period]}</p>
-                          </section>
-                          <section>
-                            <h4>{ui.proves}</h4>
-                            <p>
-                              <strong>{statusLabels[event.status]}.</strong>{" "}
-                              {event.title}
-                            </p>
-                          </section>
-                          <section>
-                            <h4>{ui.doesNotProve}</h4>
-                            <p>{research.unresolved}</p>
-                          </section>
-                          <section>
-                            <h4>{ui.technicalEvidence}</h4>
-                            <ul lang="en">
-                              {event.evidence.map((item) => (
-                                <li key={item}>{item}</li>
-                              ))}
-                            </ul>
-                          </section>
-                          <section>
-                            <h4>{ui.sources}</h4>
-                            <ul className="history-event__sources">
-                              {event.sourceKeys.map((sourceKey) => {
-                                const source = HISTORY_SOURCES[sourceKey];
-                                return (
-                                  <li key={sourceKey}>
-                                    <a href={source.url}>{source.label}</a>
-                                    <small lang="en">{source.captured}</small>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </section>
+                <div className="history-chapter__scene">
+                  <HistoryPixelScene scene={chapter.scene} />
+                  <span aria-hidden="true" className="history-chapter__number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="history-chapter__copy">
+                  <p className="history-chapter__period">
+                    {story.chapter} {index + 1} · {chapter.period}
+                  </p>
+                  <h2 id={`chapter-${chapter.id}-title`}>{copy.title}</h2>
+                  {copy.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  <p className="history-chapter__fact">
+                    <span>{story.shortVersion}</span>
+                    {copy.fact}
+                  </p>
+                </div>
+
+                <details className="history-archive" suppressHydrationWarning>
+                  <summary>
+                    <span>{story.examineEvidence}</span>
+                    <small>
+                      {events.length} {story.evidenceFiles}
+                    </small>
+                  </summary>
+                  <div className="history-archive__window">
+                    <div
+                      aria-hidden="true"
+                      className="history-archive__titlebar"
+                    >
+                      <span>teuteuteu.com / {chapter.period}</span>
+                      <span>×</span>
+                    </div>
+                    <div className="history-archive__events">
+                      {events.map((event) => (
+                        <section
+                          className="history-evidence"
+                          id={event.id}
+                          key={event.id}
+                        >
+                          <header>
+                            <span className="history-evidence__date">
+                              {event.dateTime ? (
+                                <time dateTime={event.dateTime}>
+                                  {exactDate(locale, event)}
+                                </time>
+                              ) : (
+                                event.dateLabel
+                              )}
+                            </span>
+                            <span
+                              className={`history-status history-status--${event.status}`}
+                            >
+                              {statusLabels[event.status]}
+                            </span>
+                            <h3>{event.title}</h3>
+                          </header>
+                          <ul className="history-evidence__facts" lang="en">
+                            {event.evidence.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                          <h4>{story.directSources}</h4>
+                          <ul className="history-evidence__sources">
+                            {event.sourceKeys.map((sourceKey) => {
+                              const source = HISTORY_SOURCES[sourceKey];
+                              return (
+                                <li key={sourceKey}>
+                                  <a href={source.url}>{source.label}</a>
+                                  <small lang="en">{source.captured}</small>
+                                </li>
+                              );
+                            })}
+                          </ul>
                           <button
-                            className="history-event__copy"
+                            className="history-evidence__copy"
                             data-copy-history={event.id}
                             type="button"
                           >
                             {ui.copyLink}
                           </button>
-                        </div>
-                      </details>
-                    </li>
-                  ))}
-                </ol>
+                        </section>
+                      ))}
+                    </div>
+                  </div>
+                </details>
               </section>
             );
           })}
         </div>
 
-        <footer className="history-page__footer">
-          <p className="history-page__credit">
+        <section className="history-mystery" id="mystery">
+          <div aria-hidden="true" className="history-mystery__pixel">
+            ?
+          </div>
+          <div>
+            <p className="history-mystery__label">{story.remainsUnknown}</p>
+            <h2>{story.mysteryTitle}</h2>
+            <p>{story.mysteryBody}</p>
+            <dl>
+              <div>
+                <dt>{story.strongestLead}</dt>
+                <dd>
+                  <code>premierecompagnie.free.fr</code> → <code>tomware</code>{" "}
+                  <small>(2011–2012)</small>
+                </dd>
+              </div>
+              <div>
+                <dt>{story.remainsUnknown}</dt>
+                <dd>{research.unresolved}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <footer className="history-story__footer">
+          <p>
             Restoration: <a href={RESTORER.url}>{RESTORER.name}</a>
           </p>
-          <a className="history-page__back" href={localeHomePath(locale)}>
-            ← {messages.back}
-          </a>
+          <a href={localeHomePath(locale)}>← {messages.back}</a>
         </footer>
       </article>
     </main>
