@@ -197,6 +197,20 @@ test("makes the full history progressively interactive and linkable", async ({
   await expect(page).toHaveURL(/#chapter-restoration$/);
 });
 
+test("alternates chapter illustrations across the desktop timeline", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr/history#chapter-afterlives");
+  const chapter = page.locator("#chapter-afterlives");
+  const copy = await chapter.locator(".history-chapter__copy").boundingBox();
+  const scene = await chapter.locator(".history-chapter__scene").boundingBox();
+  expect(copy).not.toBeNull();
+  expect(scene).not.toBeNull();
+  expect(scene!.x).toBeGreaterThan(copy!.x + copy!.width);
+  expect(Math.abs(scene!.y - copy!.y)).toBeLessThan(250);
+});
+
 test("keeps the 2005 archive readable without horizontal overflow on mobile", async ({
   page,
 }) => {

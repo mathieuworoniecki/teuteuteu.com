@@ -284,6 +284,9 @@ a {
   min-height: 44rem;
   scroll-margin-top: 1rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "scene copy"
+    "archive archive";
   gap: clamp(2rem, 6vw, 6rem);
   align-items: center;
   padding: clamp(5rem, 12vh, 9rem) 0;
@@ -301,13 +304,16 @@ a {
   text-underline-offset: 0.18em;
 }
 
-.history-chapter:nth-child(even) .history-chapter__scene {
-  order: 2;
+.history-chapter:nth-child(even) {
+  grid-template-areas:
+    "copy scene"
+    "archive archive";
 }
 
 .history-chapter__scene {
   position: relative;
   z-index: 1;
+  grid-area: scene;
 }
 
 .history-chapter__number {
@@ -324,6 +330,7 @@ a {
 .history-chapter__copy {
   position: relative;
   z-index: 1;
+  grid-area: copy;
   padding: 1rem 0;
   background: #fdfefe;
 }
@@ -523,6 +530,7 @@ a {
 
 .history-archive {
   z-index: 2;
+  grid-area: archive;
   grid-column: 1 / -1;
   width: min(55rem, 100%);
   margin: -1.5rem auto 0;
@@ -754,21 +762,23 @@ a {
   .history-chapter {
     min-height: 0;
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "scene"
+      "copy"
+      "archive";
     gap: 1.4rem;
     padding: 5rem 0 4rem 1rem;
   }
-  .history-chapter:nth-child(even) .history-chapter__scene {
-    order: 0;
-  }
-  .history-chapter__scene {
-    order: 0;
+  .history-chapter:nth-child(even) {
+    grid-template-areas:
+      "scene"
+      "copy"
+      "archive";
   }
   .history-chapter__copy {
-    order: 1;
     padding: 0;
   }
   .history-archive {
-    order: 2;
     margin-top: 0.4rem;
   }
   .history-chapter__number {
